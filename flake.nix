@@ -24,17 +24,26 @@
       packages = import ./modules/packages.nix;
       development = import ./modules/development.nix;
       environment = import ./modules/environment.nix;
+      docker = import ./modules/docker.nix;
       services = import ./modules/services;
     };
 
     # Export library functions
     inherit lib;
 
+    extraConfig = {
+      agentbox.docker.enable = true;
+
+      # Optionally sync Docker config (credentials, settings) from host
+      agentbox.docker.syncConfigFromHost = true;
+    };
+
     # NixOS VM configurations for each host system
     nixosConfigurations = builtins.listToAttrs (map (hostSystem: {
       name = "vm-${hostSystem}";
       value = lib.mkDevVm {
         inherit hostSystem;
+        extraConfig = self.extraConfig;
       };
     }) allSystems);
 
@@ -57,9 +66,15 @@
 
         vmName = vmConfig.config.agentbox.vm.hostname;
 
+        # Extract host shares from VM config for the runner script
+        # Only need tag and hostPath for the 9p virtfs setup
+        hostShares = map (share: {
+          inherit (share) tag hostPath;
+        }) vmConfig.config.agentbox.hostShares;
+
         # Use the library helper to generate wrapper scripts
         vmRunner = import ./lib/mk-vm-runner.nix {
-          inherit pkgs vmDrv vmName;
+          inherit pkgs vmDrv vmName hostShares;
           projectMarker = vmConfig.config.agentbox.project.marker;
         };
       in {

@@ -44,6 +44,7 @@ in
     ./packages.nix
     ./development.nix
     ./environment.nix
+    ./docker.nix
     ./services
   ];
 

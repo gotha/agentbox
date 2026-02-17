@@ -115,6 +115,23 @@ Import agentbox into your own flake to create project-specific VMs:
 | `agentbox.packages.extra` | list of package | `[]` | Additional packages to install |
 | `agentbox.environment.variables` | attrs of string | `{}` | Environment variables |
 | `agentbox.hostShares` | list of hostShare | `[]` | Host directories to sync into VM |
+| `agentbox.docker.enable` | bool | `false` | Enable Docker daemon and packages |
+| `agentbox.docker.syncConfigFromHost` | bool | `false` | Copy `~/.docker` from host to guest |
+
+## Docker
+
+Docker is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.docker.enable = true;
+
+  # Optionally sync Docker config (credentials, settings) from host
+  agentbox.docker.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs the Docker daemon, `docker` and `docker-compose` CLI tools, and adds the user to the `docker` group.
 
 ## Host Shares
 
