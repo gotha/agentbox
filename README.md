@@ -117,6 +117,8 @@ Import agentbox into your own flake to create project-specific VMs:
 | `agentbox.hostShares` | list of hostShare | `[]` | Host directories to sync into VM |
 | `agentbox.docker.enable` | bool | `false` | Enable Docker daemon and packages |
 | `agentbox.docker.syncConfigFromHost` | bool | `false` | Copy `~/.docker` from host to guest |
+| `agentbox.auggie.enable` | bool | `false` | Enable Auggie (Augment Code CLI) |
+| `agentbox.auggie.syncConfigFromHost` | bool | `false` | Copy `~/.augment` from host to guest |
 
 ## Docker
 
@@ -132,6 +134,23 @@ extraConfig = {
 ```
 
 When enabled, this installs the Docker daemon, `docker` and `docker-compose` CLI tools, and adds the user to the `docker` group.
+
+## Auggie (Augment Code CLI)
+
+[Auggie](https://docs.augmentcode.com/cli/overview) is the Augment Code CLI tool for AI-assisted development. It is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.auggie.enable = true;
+
+  # Optionally sync Augment config (credentials, settings) from host
+  agentbox.auggie.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs the `auggie` CLI tool from [gotha/nixpkgs](https://github.com/gotha/nixpkgs).
+
+If `syncConfigFromHost` is enabled, the `~/.augment` directory from your host machine will be copied into the VM on boot, allowing the agent to use your Augment credentials.
 
 ## Host Shares
 

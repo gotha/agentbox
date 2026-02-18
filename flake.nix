@@ -3,16 +3,17 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    gotha-nixpkgs.url = "github:gotha/nixpkgs";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, gotha-nixpkgs }:
   let
     # Support Linux and Darwin (macOS) hosts
     allSystems = [ "aarch64-linux" "x86_64-linux" "aarch64-darwin" "x86_64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs allSystems;
 
     # Import library functions
-    lib = import ./lib { inherit nixpkgs; };
+    lib = import ./lib { inherit nixpkgs gotha-nixpkgs; };
 
   in {
     # Export NixOS modules for consumption by other flakes
@@ -25,6 +26,7 @@
       development = import ./modules/development.nix;
       environment = import ./modules/environment.nix;
       docker = import ./modules/docker.nix;
+      auggie = import ./modules/auggie.nix;
       services = import ./modules/services;
     };
 
@@ -32,10 +34,11 @@
     inherit lib;
 
     extraConfig = {
-      agentbox.docker.enable = true;
+      #agentbox.docker.enable = true;
+      #agentbox.docker.syncConfigFromHost = true;
 
-      # Optionally sync Docker config (credentials, settings) from host
-      agentbox.docker.syncConfigFromHost = true;
+      #agentbox.auggie.enable = true;
+      #agentbox.auggie.syncConfigFromHost = true;
     };
 
     # NixOS VM configurations for each host system

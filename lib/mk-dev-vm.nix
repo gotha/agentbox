@@ -1,9 +1,8 @@
 # Helper function to create a NixOS VM configuration
-{ nixpkgs }:
+{ nixpkgs, gotha-nixpkgs ? null }:
 { hostSystem
 , modules ? []
 , extraConfig ? {}
-, modulesPath ? null
 }:
 let
   # Map host system to guest VM system
@@ -17,10 +16,10 @@ let
   guestSystem = hostToGuest.${hostSystem};
   hostPkgs = nixpkgs.legacyPackages.${hostSystem};
 
-  # Get the modules path from nixpkgs if not provided
-  nixpkgsModulesPath = if modulesPath != null
-    then modulesPath
-    else "${nixpkgs}/nixos/modules";
+  # Get auggie package from gotha-nixpkgs if available
+  gothaPkgs = if gotha-nixpkgs != null
+    then gotha-nixpkgs.packages.${guestSystem}
+    else {};
 in
 nixpkgs.lib.nixosSystem {
   system = guestSystem;
@@ -31,6 +30,11 @@ nixpkgs.lib.nixosSystem {
       virtualisation.host.pkgs = hostPkgs;
     })
 
+    # Allow unfree software
+    ({ ... }: {
+      nixpkgs.config.allowUnfree = true;
+    })
+
     # The main devenv module
     ../modules
 
@@ -39,7 +43,7 @@ nixpkgs.lib.nixosSystem {
   ] ++ modules;
 
   specialArgs = {
-    inherit hostPkgs hostSystem;
+    inherit hostPkgs hostSystem gothaPkgs;
   };
 }
 

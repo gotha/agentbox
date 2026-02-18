@@ -1,6 +1,39 @@
 {
   "nodes": {
+    "gotha-nixpkgs": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1771394122,
+        "narHash": "sha256-Z8gca9rOPaYchx7uR7g4iWKh8FOQ7+ZRSsR9O/Ilri8=",
+        "owner": "gotha",
+        "repo": "nixpkgs",
+        "rev": "2292ed482b47e3b600d69da97123b697c49bd5fb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gotha",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
+      "locked": {
+        "lastModified": 1762193579,
+        "narHash": "sha256-JYU1yRI4QSDDybCHaVeRGyxLdDQJf2nsYrh8+6LQvgk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "7aeb722dae56de97ee1246e22c88880ca2606238",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
       "locked": {
         "lastModified": 1770770419,
         "narHash": "sha256-iKZMkr6Cm9JzWlRYW/VPoL0A9jVKtZYiU4zSrVeetIs=",
@@ -18,7 +51,8 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "gotha-nixpkgs": "gotha-nixpkgs",
+        "nixpkgs": "nixpkgs_2"
       }
     }
   },

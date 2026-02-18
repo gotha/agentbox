@@ -45,6 +45,7 @@ in
     ./development.nix
     ./environment.nix
     ./docker.nix
+    ./auggie.nix
     ./services
   ];
 
