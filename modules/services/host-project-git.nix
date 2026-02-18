@@ -6,6 +6,7 @@ let
   projectCfg = cfg.project;
   gitCfg = projectCfg.source.git;
   isGit = projectCfg.source.type == "git";
+  hasShares = cfg.hostShares != [];
 in
 {
   systemd.services.clone-host-project = lib.mkIf isGit {
@@ -13,8 +14,10 @@ in
     wantedBy = [ "multi-user.target" ];
 
     # Wait for network since we need to clone from remote
-    after = [ "network-online.target" ];
+    # Also wait for host config sync (SSH keys, known_hosts) if hostShares are configured
+    after = [ "network-online.target" ] ++ lib.optional hasShares "copy-host-configs.service";
     wants = [ "network-online.target" ];
+    requires = lib.optional hasShares "copy-host-configs.service";
 
     path = [ pkgs.coreutils pkgs.git pkgs.openssh ];
 

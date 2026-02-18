@@ -16,6 +16,9 @@
   # Project source: git tests (G1-G7)
   project-git = import ./project-git.nix { inherit pkgs self; };
 
+  # Project source: git with SSH keys tests (GS1-GS3)
+  project-git-ssh = import ./project-git-ssh.nix { inherit pkgs self; };
+
   # Host shares sync tests (H1-H4)
   host-shares = import ./host-shares.nix { inherit pkgs self; };
 
