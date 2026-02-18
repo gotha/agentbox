@@ -119,6 +119,8 @@ Import agentbox into your own flake to create project-specific VMs:
 | `agentbox.docker.syncConfigFromHost` | bool | `false` | Copy `~/.docker` from host to guest |
 | `agentbox.auggie.enable` | bool | `false` | Enable Auggie (Augment Code CLI) |
 | `agentbox.auggie.syncConfigFromHost` | bool | `false` | Copy `~/.augment` from host to guest |
+| `agentbox.cursor.enable` | bool | `false` | Enable Cursor CLI |
+| `agentbox.cursor.syncConfigFromHost` | bool | `false` | Copy `~/.cursor` from host to guest |
 
 ## Docker
 
@@ -151,6 +153,23 @@ extraConfig = {
 When enabled, this installs the `auggie` CLI tool from [gotha/nixpkgs](https://github.com/gotha/nixpkgs).
 
 If `syncConfigFromHost` is enabled, the `~/.augment` directory from your host machine will be copied into the VM on boot, allowing the agent to use your Augment credentials.
+
+## Cursor CLI
+
+[Cursor](https://www.cursor.com/) CLI for AI-assisted development. It is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.cursor.enable = true;
+
+  # Optionally sync Cursor config from host
+  agentbox.cursor.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs the `cursor-cli` from nixpkgs.
+
+If `syncConfigFromHost` is enabled, the `~/.cursor` directory from your host machine will be copied into the VM on boot.
 
 ## Host Shares
 

@@ -27,6 +27,7 @@
       environment = import ./modules/environment.nix;
       docker = import ./modules/docker.nix;
       auggie = import ./modules/auggie.nix;
+      cursor = import ./modules/cursor.nix;
       services = import ./modules/services;
     };
 
