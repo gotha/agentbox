@@ -49,7 +49,25 @@ in
           local mount_point="/mnt/$tag"
           mkdir -p "$mount_point"
 
-          if mount -t 9p -o trans=virtio,version=9p2000.L,ro "$tag" "$mount_point" 2>/dev/null; then
+          # Check if already mounted (e.g., by test infrastructure or earlier boot)
+          local already_mounted=false
+          if mountpoint -q "$mount_point" 2>/dev/null; then
+            already_mounted=true
+            echo "Mount point $mount_point is already mounted"
+          fi
+
+          # Try to mount if not already mounted
+          if [ "$already_mounted" = false ]; then
+            if mount -t 9p -o trans=virtio,version=9p2000.L,ro "$tag" "$mount_point" 2>/dev/null; then
+              echo "Mounted $tag at $mount_point"
+            else
+              echo "Host config '$tag' not available (skipping)"
+              return 0
+            fi
+          fi
+
+          # Now check if there are files to copy
+          if [ -d "$mount_point" ] && [ "$(ls -A "$mount_point" 2>/dev/null)" ]; then
             echo "Copying $tag -> $dest"
 
             mkdir -p "$dest"
@@ -66,10 +84,13 @@ in
 
             echo "Files in $dest:"
             ls -la "$dest/" || true
-
-            umount "$mount_point" || true
           else
-            echo "Host config '$tag' not available (skipping)"
+            echo "Mount point $mount_point has no files (skipping)"
+          fi
+
+          # Unmount only if we mounted it ourselves
+          if [ "$already_mounted" = false ]; then
+            umount "$mount_point" || true
           fi
         }
 

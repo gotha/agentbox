@@ -2,7 +2,10 @@
 { pkgs
 , vmDrv
 , vmName ? "dev-vm"
-, projectMarker ? "go.mod"
+, projectMarker ? "flake.nix"
+, projectSourceType ? "mount"
+, projectSourcePath ? null  # null means auto-detect
+, projectDestPath ? "/home/dev/project"
 , hostShares ? []
 }:
 let
@@ -14,6 +17,61 @@ let
     fi
   '') hostShares);
 
+  # Function to auto-detect project directory by walking up to find marker
+  autoDetectProjectCode = ''
+    find_project_root() {
+      local dir="$1"
+      local marker="$2"
+
+      while [ "$dir" != "/" ]; do
+        if [ -f "$dir/$marker" ]; then
+          echo "$dir"
+          return 0
+        fi
+        dir="$(dirname "$dir")"
+      done
+      return 1
+    }
+  '';
+
+  # Determine project directory based on configuration
+  projectDirCode = if projectSourcePath != null then ''
+    # Use explicit source path from configuration
+    PROJECT_DIR="${projectSourcePath}"
+    if [ ! -d "$PROJECT_DIR" ]; then
+      echo "Error: Configured source path does not exist: $PROJECT_DIR"
+      exit 1
+    fi
+  '' else ''
+    # Auto-detect project directory by walking up to find marker
+    START_DIR="$(pwd)"
+    PROJECT_DIR=$(find_project_root "$START_DIR" "${projectMarker}")
+    if [ -z "$PROJECT_DIR" ]; then
+      echo "Warning: Could not find project directory with ${projectMarker}"
+      echo "Searched from: $START_DIR"
+      echo "Run from the project directory or set source.path in your configuration."
+      PROJECT_DIR=""
+    fi
+  '';
+
+  # Set up project share based on source type
+  projectShareCode = if projectSourceType == "mount" then ''
+    # Mount source type: share read-write via 9p virtfs
+    if [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+      echo "Sharing project (mount): $PROJECT_DIR -> ${projectDestPath}"
+      SHARE_ARGS="$SHARE_ARGS -virtfs local,path=$PROJECT_DIR,mount_tag=host-project,security_model=mapped-xattr"
+    fi
+  '' else if projectSourceType == "copy" then ''
+    # Copy source type: share read-only via 9p virtfs (VM will rsync to local disk)
+    if [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+      echo "Sharing project (copy): $PROJECT_DIR -> ${projectDestPath}"
+      SHARE_ARGS="$SHARE_ARGS -virtfs local,path=$PROJECT_DIR,mount_tag=host-project-src,security_model=mapped-xattr,readonly=on"
+    fi
+  '' else ''
+    # Git source type: no host share needed (VM will clone from URL)
+    echo "Project source type: git (no host share needed)"
+  '';
+
   # Common script logic shared between headless and GUI modes
   commonScript = ''
     # Pick a random SSH port in range 20000-30000
@@ -21,19 +79,11 @@ let
 
     SHARE_ARGS=""
 
-    # Share the project directory - use PWD since $0 points to nix store
-    PROJECT_DIR="$(pwd)"
-    # If we're in devenv, go up one level
-    if [ "$(basename "$PROJECT_DIR")" = "devenv" ]; then
-      PROJECT_DIR="$(dirname "$PROJECT_DIR")"
-    fi
-    if [ -d "$PROJECT_DIR" ] && [ -f "$PROJECT_DIR/${projectMarker}" ]; then
-      echo "Sharing project: $PROJECT_DIR -> /home/dev/project"
-      SHARE_ARGS="-virtfs local,path=$PROJECT_DIR,mount_tag=host-project,security_model=mapped-xattr"
-    else
-      echo "Warning: Could not find project directory with ${projectMarker} in $PROJECT_DIR"
-      echo "Run from the project root or devenv directory to enable project mounting."
-    fi
+    ${autoDetectProjectCode}
+
+    ${projectDirCode}
+
+    ${projectShareCode}
 
     # Set up host config shares
     ${shareSetupCode}

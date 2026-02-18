@@ -30,11 +30,26 @@
   # Projects should override this with their specific needs
   hostShares = [];
 
-  # Project mounting
+  # Project source configuration
   project = {
-    mountPath = "/home/dev/project";
-    marker = "flake.nix";  # File that identifies project root
-    symlink = null;        # Optional symlink path
+    source = {
+      type = "mount";        # "mount" | "copy" | "git"
+      path = null;           # Auto-detect via marker if null
+      refresh = "if-missing"; # "always" | "if-missing"
+      required = true;       # Fail boot if source setup fails
+      git = {
+        url = null;
+        ref = null;          # Use repo's default branch if null
+        shallow = false;     # Full clone by default
+        depth = 1;
+      };
+      copy = {
+        excludePatterns = []; # Empty by default, user must specify
+      };
+    };
+    destPath = "/home/dev/project";
+    marker = "flake.nix";    # File that identifies project root
+    validateMarker = true;   # Validate marker exists
   };
 
   # Environment variables

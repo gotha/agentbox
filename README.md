@@ -9,6 +9,7 @@ Agentbox creates reproducible, sandboxed Linux VMs where AI coding agents can sa
 ## Features
 
 - **Isolated execution** - Agents run in a fully sandboxed NixOS VM
+- **Flexible project sources** - Mount from host, copy for isolation, or clone from git
 - **Host file sharing** - Securely share project files and configurations via 9p virtfs
 - **Reproducible environments** - Declarative Nix configuration ensures consistency
 - **Customizable** - Override any option to match your project's needs
@@ -71,11 +72,11 @@ Import agentbox into your own flake to create project-specific VMs:
             # Open ports for your services
             agentbox.networking.ports = [ 22 3000 8080 ];
 
-            # Configure project mounting
+            # Configure project source (see "Project Source" section below)
             agentbox.project = {
-              mountPath = "/home/dev/project";
+              source.type = "mount";  # "mount" | "copy" | "git"
+              destPath = "/home/dev/project";
               marker = "package.json";  # File that identifies project root
-              symlink = "/home/dev/my-project";
             };
 
             # Add project-specific packages
@@ -102,6 +103,8 @@ Import agentbox into your own flake to create project-specific VMs:
 
 ## Configuration Options
 
+### VM Options
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `agentbox.vm.hostname` | string | `"dev-vm"` | VM hostname |
@@ -110,17 +113,104 @@ Import agentbox into your own flake to create project-specific VMs:
 | `agentbox.vm.diskSize` | int | `50000` | Disk size in megabytes |
 | `agentbox.user.name` | string | `"dev"` | Primary user name |
 | `agentbox.networking.ports` | list of int | `[22]` | TCP ports to open |
-| `agentbox.project.mountPath` | string | `"/home/dev/project"` | Where to mount host project |
-| `agentbox.project.marker` | string | `"flake.nix"` | File that identifies project root |
 | `agentbox.packages.extra` | list of package | `[]` | Additional packages to install |
 | `agentbox.environment.variables` | attrs of string | `{}` | Environment variables |
 | `agentbox.hostShares` | list of hostShare | `[]` | Host directories to sync into VM |
+
+### Project Source Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `agentbox.project.source.type` | enum | `"mount"` | Source type: `"mount"`, `"copy"`, or `"git"` |
+| `agentbox.project.source.path` | string or null | `null` | Host path for mount/copy (auto-detects via marker if null) |
+| `agentbox.project.source.refresh` | enum | `"if-missing"` | Refresh policy: `"always"` or `"if-missing"` (copy/git only) |
+| `agentbox.project.source.required` | bool | `true` | Fail boot if source setup fails |
+| `agentbox.project.source.git.url` | string or null | `null` | Git repository URL (required for git type) |
+| `agentbox.project.source.git.ref` | string or null | `null` | Git ref to checkout (uses default branch if null) |
+| `agentbox.project.source.git.shallow` | bool | `false` | Use shallow clone |
+| `agentbox.project.source.git.depth` | int | `1` | Clone depth (when shallow is true) |
+| `agentbox.project.source.copy.excludePatterns` | list of string | `[]` | Patterns to exclude from rsync copy |
+| `agentbox.project.destPath` | string | `"/home/dev/project"` | Destination path in VM |
+| `agentbox.project.marker` | string | `"flake.nix"` | File that identifies project root |
+| `agentbox.project.validateMarker` | bool | `true` | Validate marker file exists after setup |
+
+### Tool Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
 | `agentbox.docker.enable` | bool | `false` | Enable Docker daemon and packages |
 | `agentbox.docker.syncConfigFromHost` | bool | `false` | Copy `~/.docker` from host to guest |
 | `agentbox.auggie.enable` | bool | `false` | Enable Auggie (Augment Code CLI) |
 | `agentbox.auggie.syncConfigFromHost` | bool | `false` | Copy `~/.augment` from host to guest |
 | `agentbox.cursor.enable` | bool | `false` | Enable Cursor CLI |
 | `agentbox.cursor.syncConfigFromHost` | bool | `false` | Copy `~/.cursor` from host to guest |
+
+## Project Source
+
+Agentbox supports three methods to provide project source code to the VM:
+
+### Mount (Default)
+
+Mounts the host project directory directly into the VM via 9p virtfs. Changes in the VM are immediately reflected on the host (read-write).
+
+```nix
+agentbox.project = {
+  source.type = "mount";
+  # source.path is auto-detected by walking up to find marker file
+  destPath = "/home/dev/project";
+  marker = "flake.nix";
+};
+```
+
+**Use case:** Interactive development where you want changes to persist to the host.
+
+### Copy
+
+Copies the project from host to VM using rsync at boot time. The VM has its own isolated copy (changes don't affect host).
+
+```nix
+agentbox.project = {
+  source.type = "copy";
+  source.refresh = "always";  # or "if-missing" to persist changes across reboots
+  source.copy.excludePatterns = [ ".git" "node_modules" "target" ];
+  destPath = "/home/dev/project";
+};
+```
+
+**Use case:** AI agent sandboxes where you want isolation from the host filesystem.
+
+### Git
+
+Clones a git repository directly into the VM at boot time. Supports private repos via SSH keys shared through `hostShares`.
+
+```nix
+agentbox.project = {
+  source.type = "git";
+  source.git.url = "https://github.com/user/repo.git";
+  source.git.ref = "main";  # optional: branch, tag, or commit
+  source.git.shallow = true;  # optional: shallow clone
+  destPath = "/home/dev/project";
+};
+```
+
+For private repositories, share SSH keys:
+
+```nix
+agentbox.hostShares = [{
+  tag = "ssh-keys";
+  hostPath = ".ssh";
+  dest = ".ssh";
+  mode = "700";
+  fileOverrides = [ "id_ed25519:600" "id_rsa:600" ];
+}];
+
+agentbox.project = {
+  source.type = "git";
+  source.git.url = "git@github.com:user/private-repo.git";
+};
+```
+
+**Use case:** CI/CD environments, reproducible builds, or when you don't have the project locally.
 
 ## Docker
 
@@ -186,6 +276,72 @@ agentbox.hostShares = [
   }
 ];
 ```
+
+## Development
+
+### Running Tests
+
+Agentbox uses the NixOS VM testing framework for end-to-end tests. Tests boot actual VMs and verify functionality.
+
+```bash
+# Run all tests
+nix flake check
+
+# Run a specific test with build logs
+nix build .#checks.x86_64-linux.boot --print-build-logs
+
+# Available tests:
+#   boot          - Basic VM boot tests (B1-B5)
+#   project-mount - Mount source type tests (M1-M6)
+#   project-copy  - Copy source type tests (C1-C6)
+#   project-git   - Git source type tests (G1-G7)
+#   host-shares   - Host shares sync tests (H1-H4)
+#   tools-docker  - Docker integration tests (D1-D4)
+```
+
+### Debugging Tests
+
+For interactive debugging, you can run the test driver manually:
+
+```bash
+# Build the interactive test driver
+nix build .#checks.x86_64-linux.boot.driverInteractive
+
+# Run the driver
+./result/bin/nixos-test-driver
+
+# In the Python REPL:
+>>> start_all()           # Start the VM
+>>> machine.shell_interact()  # Get an interactive shell
+>>> machine.succeed("id dev")  # Run commands
+>>> machine.screenshot("debug")  # Take a screenshot
+```
+
+### Adding New Tests
+
+Tests are located in `tests/`. Each test file follows this pattern:
+
+```nix
+# tests/my-feature.nix
+{ pkgs, self }:
+
+pkgs.nixosTest {
+  name = "agentbox-my-feature";
+
+  nodes.machine = { config, pkgs, ... }: {
+    imports = [ self.nixosModules.default ];
+    # Configure the VM...
+  };
+
+  testScript = ''
+    machine.start()
+    machine.wait_for_unit("multi-user.target")
+    # Add assertions...
+  '';
+}
+```
+
+Then add the test to `tests/default.nix` and update `flake.nix` if needed.
 
 ## License
 

@@ -40,6 +40,11 @@
 
       #agentbox.auggie.enable = true;
       #agentbox.auggie.syncConfigFromHost = true;
+
+      #agentbox.project = {
+      #  source.type = "copy";
+      #  marker = "go.mod";
+      #};
     };
 
     # NixOS VM configurations for each host system
@@ -61,6 +66,17 @@
       }
     );
 
+    # NixOS VM tests (only on Linux)
+    checks.x86_64-linux = import ./tests {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      inherit self;
+    };
+
+    checks.aarch64-linux = import ./tests {
+      pkgs = nixpkgs.legacyPackages.aarch64-linux;
+      inherit self;
+    };
+
     # Apps to run the VM directly
     apps = forAllSystems (hostSystem:
       let
@@ -76,10 +92,16 @@
           inherit (share) tag hostPath;
         }) vmConfig.config.agentbox.hostShares;
 
+        # Extract project configuration
+        projectCfg = vmConfig.config.agentbox.project;
+
         # Use the library helper to generate wrapper scripts
         vmRunner = import ./lib/mk-vm-runner.nix {
           inherit pkgs vmDrv vmName hostShares;
-          projectMarker = vmConfig.config.agentbox.project.marker;
+          projectMarker = projectCfg.marker;
+          projectSourceType = projectCfg.source.type;
+          projectSourcePath = projectCfg.source.path;
+          projectDestPath = projectCfg.destPath;
         };
       in {
         default = { type = "app"; program = "${vmRunner.headless}/bin/run-${vmName}"; };

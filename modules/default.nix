@@ -137,22 +137,84 @@ in
       description = "Host directories to sync into VM on boot";
     };
 
-    # Project mounting
+    # Project source configuration
     project = {
-      mountPath = mkOption {
-        type = types.str;
-        default = defaults.project.mountPath;
-        description = "Where to mount host project";
+      source = {
+        type = mkOption {
+          type = types.enum [ "mount" "copy" "git" ];
+          default = defaults.project.source.type;
+          description = "Method for providing source code to the VM: mount (9p virtfs), copy (rsync), or git (clone)";
+        };
+
+        path = mkOption {
+          type = types.nullOr types.str;
+          default = defaults.project.source.path;
+          description = "Path to source directory on host (for mount/copy types). If not specified, walks up from flake directory to find project root using marker.";
+        };
+
+        refresh = mkOption {
+          type = types.enum [ "always" "if-missing" ];
+          default = defaults.project.source.refresh;
+          description = "When to refresh source (for copy/git types). 'always' = every boot, 'if-missing' = only if destPath doesn't exist";
+        };
+
+        required = mkOption {
+          type = types.bool;
+          default = defaults.project.source.required;
+          description = "If true, VM fails to boot if source setup fails. If false, logs warning and continues.";
+        };
+
+        git = {
+          url = mkOption {
+            type = types.nullOr types.str;
+            default = defaults.project.source.git.url;
+            description = "Git repository URL";
+          };
+
+          ref = mkOption {
+            type = types.nullOr types.str;
+            default = defaults.project.source.git.ref;
+            description = "Git ref to checkout (branch, tag, or commit). If not specified, uses repository's default branch.";
+          };
+
+          shallow = mkOption {
+            type = types.bool;
+            default = defaults.project.source.git.shallow;
+            description = "Perform shallow clone";
+          };
+
+          depth = mkOption {
+            type = types.int;
+            default = defaults.project.source.git.depth;
+            description = "Clone depth for shallow clones";
+          };
+        };
+
+        copy = {
+          excludePatterns = mkOption {
+            type = types.listOf types.str;
+            default = defaults.project.source.copy.excludePatterns;
+            description = "Patterns to exclude when copying source (rsync --exclude format)";
+          };
+        };
       };
+
+      destPath = mkOption {
+        type = types.str;
+        default = defaults.project.destPath;
+        description = "Destination path in the guest VM for the project source";
+      };
+
       marker = mkOption {
         type = types.str;
         default = defaults.project.marker;
-        description = "File that identifies project root";
+        description = "File that identifies the project root (used for auto-detection and validation)";
       };
-      symlink = mkOption {
-        type = types.nullOr types.str;
-        default = defaults.project.symlink;
-        description = "Optional symlink to create pointing to mount";
+
+      validateMarker = mkOption {
+        type = types.bool;
+        default = defaults.project.validateMarker;
+        description = "If true, validates that the marker file exists in the source";
       };
     };
 

@@ -5,12 +5,16 @@ let
 in
 {
   environment.systemPackages = with pkgs; [
+    # Base utilities
     sudo
     curl
     vim
     htop
-    git
     direnv
+
+    # Always install git and rsync to support all project source types
+    git
+    rsync
   ] ++ cfg.packages.extra;
 }
 
