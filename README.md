@@ -41,65 +41,24 @@ nix run .#vm
 
 ## Usage as a Flake Input
 
-Import agentbox into your own flake to create project-specific VMs:
+Import agentbox into your own flake to create project-specific VMs. See the [examples](./examples) folder for complete configurations:
 
-```nix
-{
-  description = "My project development VM";
+- **[minimal-auggie-mount](./examples/minimal-auggie-mount)** - Minimal VM with Auggie CLI and mounted project source
+- **[minimal-cursor-mount](./examples/minimal-cursor-mount)** - Minimal VM with Cursor CLI and mounted project source
+- **[go-project-git](./examples/go-project-git)** - Full-featured Go project VM with git source, SSH keys, Docker, and custom packages
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    agentbox.url = "github:gotha/agentbox";
-  };
+### Running Your VM
 
-  outputs = { self, nixpkgs, agentbox, ... }:
-    let
-      # Map host systems to VM guest systems
-      systems = [ "aarch64-darwin" "x86_64-darwin" "x86_64-linux" "aarch64-linux" ];
-    in
-    {
-      # Create VM configurations for each supported host system
-      nixosConfigurations = builtins.listToAttrs (map (hostSystem: {
-        name = "vm-${hostSystem}";
-        value = agentbox.lib.mkDevVm {
-          inherit hostSystem;
-          extraConfig = {
-            # Customize your VM
-            agentbox.vm.hostname = "my-project-vm";
-            agentbox.vm.memorySize = 8192;  # 8GB RAM
-            agentbox.vm.cores = 4;
+After creating your `flake.nix`, run the VM with:
 
-            # Open ports for your services
-            agentbox.networking.ports = [ 22 3000 8080 ];
-
-            # Configure project source (see "Project Source" section below)
-            agentbox.project = {
-              source.type = "mount";  # "mount" | "copy" | "git"
-              destPath = "/home/dev/project";
-              marker = "package.json";  # File that identifies project root
-            };
-
-            # Add project-specific packages
-            agentbox.packages.extra = with nixpkgs.legacyPackages.${
-              if hostSystem == "aarch64-darwin" then "aarch64-linux"
-              else if hostSystem == "x86_64-darwin" then "x86_64-linux"
-              else hostSystem
-            }; [
-              nodejs_22
-              yarn
-            ];
-
-            # Set environment variables
-            agentbox.environment.variables = {
-              NODE_ENV = "development";
-              API_URL = "http://localhost:8080";
-            };
-          };
-        };
-      }) systems);
-    };
-}
+```bash
+# Run VM in headless mode (recommended)
+nix run .#vm
 ```
+
+The default credentials are:
+- **Username:** `dev`
+- **Password:** empty
 
 ## Configuration Options
 
