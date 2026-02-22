@@ -45,7 +45,7 @@ Import agentbox into your own flake to create project-specific VMs. See the [exa
 
 - **[minimal-auggie-mount](./examples/minimal-auggie-mount)** - Minimal VM with Auggie CLI and mounted project source
 - **[minimal-cursor-mount](./examples/minimal-cursor-mount)** - Minimal VM with Cursor CLI and mounted project source
-- **[go-project-git](./examples/go-project-git)** - Full-featured Go project VM with git source, SSH keys, Docker, and custom packages
+- **[custom-tools-git-clone](./examples/custom-tools-git-clone)** - Full-featured Go project VM with git source, SSH keys, Docker, and custom packages
 
 ### Running Your VM
 

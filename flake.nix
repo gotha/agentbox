@@ -78,36 +78,8 @@
     };
 
     # Apps to run the VM directly
-    apps = forAllSystems (hostSystem:
-      let
-        pkgs = nixpkgs.legacyPackages.${hostSystem};
-        vmConfig = self.nixosConfigurations."vm-${hostSystem}";
-        vmDrv = vmConfig.config.system.build.vm;
-
-        vmName = vmConfig.config.agentbox.vm.hostname;
-
-        # Extract host shares from VM config for the runner script
-        # Only need tag and hostPath for the 9p virtfs setup
-        hostShares = map (share: {
-          inherit (share) tag hostPath;
-        }) vmConfig.config.agentbox.hostShares;
-
-        # Extract project configuration
-        projectCfg = vmConfig.config.agentbox.project;
-
-        # Use the library helper to generate wrapper scripts
-        vmRunner = import ./lib/mk-vm-runner.nix {
-          inherit pkgs vmDrv vmName hostShares;
-          projectMarker = projectCfg.marker;
-          projectSourceType = projectCfg.source.type;
-          projectSourcePath = projectCfg.source.path;
-          projectDestPath = projectCfg.destPath;
-        };
-      in {
-        default = { type = "app"; program = "${vmRunner.headless}/bin/run-${vmName}"; };
-        vm = { type = "app"; program = "${vmRunner.headless}/bin/run-${vmName}"; };
-        vm-gui = { type = "app"; program = "${vmRunner.gui}/bin/run-${vmName}-gui"; };
-      }
-    );
+    apps = lib.mkVmApps {
+      inherit (self) nixosConfigurations;
+    };
   };
 }

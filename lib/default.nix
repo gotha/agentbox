@@ -6,5 +6,8 @@
 
   # Create wrapper scripts for running the VM
   mkVmRunner = import ./mk-vm-runner.nix;
+
+  # Generate apps from nixosConfigurations (eliminates boilerplate in consumer flakes)
+  mkVmApps = import ./mk-vm-apps.nix { inherit nixpkgs; };
 }
 
