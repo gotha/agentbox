@@ -50,7 +50,7 @@
 
             # Set environment variables
             agentbox.environment.variables = {
-              CGO_ENABLED = 0;
+              CGO_ENABLED = "0";
               API_URL = "http://localhost:8080";
             };
 
