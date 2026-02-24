@@ -28,6 +28,11 @@ in
     cores = cfg.vm.cores;
     memorySize = cfg.vm.memorySize;
     diskSize = cfg.vm.diskSize;
+
+    # Disable default qemu-vm.nix networking to avoid duplicate network interfaces.
+    # The runner script (mk-vm-runner.nix) provides custom networking with SSH port forwarding.
+    # Must use lib.mkForce because qemu-vm.nix sets a default value in config, not in option definition.
+    qemu.networkingOptions = lib.mkForce [];
   };
 }
 

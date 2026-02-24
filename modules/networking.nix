@@ -16,6 +16,8 @@ in
     settings = {
       PasswordAuthentication = cfg.networking.ssh.passwordAuth;
       PermitRootLogin = cfg.networking.ssh.permitRootLogin;
+      # Allow empty passwords for dev VM passwordless login
+      PermitEmptyPasswords = "yes";
     };
   };
 }
