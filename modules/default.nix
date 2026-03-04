@@ -46,7 +46,9 @@ in
     ./environment.nix
     ./docker.nix
     ./auggie.nix
+    ./codex.nix
     ./cursor.nix
+    ./claude-code.nix
     ./services
   ];
 

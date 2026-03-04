@@ -20,6 +20,7 @@ let
   gothaPkgs = if gotha-nixpkgs != null
     then gotha-nixpkgs.packages.${guestSystem}
     else {};
+
 in
 nixpkgs.lib.nixosSystem {
   system = guestSystem;
