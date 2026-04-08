@@ -39,6 +39,48 @@ cd agentbox
 nix run .#vm
 ```
 
+## AI Agent Skill
+
+Agentbox provides an installable skill that teaches AI coding agents how to create and manage VMs autonomously. This enables agents to safely execute code in isolated environments.
+
+### Installing the Skill
+
+Install the skill for your AI coding agent using [npx skills](https://github.com/vercel-labs/add-skill):
+
+```bash
+# Install for all supported agents
+npx skills add gotha/agentbox
+
+# Install for specific agents
+npx skills add gotha/agentbox --agent claude-code --agent cursor --agent augment
+```
+
+Supported agents: Claude Code, Cursor, Augment, Codex, OpenCode, Cline, Roo, Windsurf, GitHub Copilot.
+
+### Using the Skill
+
+Once installed, instruct your AI agent to use agentbox when you need isolated execution:
+
+> "Use agentbox to run the tests for this project in an isolated VM"
+
+> "Create an agentbox VM for this project so we can safely experiment with the code"
+
+> "Set up an isolated development environment using agentbox"
+
+The agent will:
+1. Analyze your project to detect required packages and dependencies
+2. Create a `.agentbox/flake.nix` configuration tailored to your project
+3. Start a VM and connect via SSH
+4. Execute tasks safely inside the isolated environment
+5. Commit and push changes via git when using git source type
+
+### What the Agent Decides Automatically
+
+- **Source type**: Git clone (if remote exists) → Copy (no remote) → Mount (only if explicitly requested)
+- **Packages**: Auto-detected from project files (package.json → Node.js, go.mod → Go, etc.)
+- **Docker**: Enabled if Dockerfile or docker-compose.yml is detected
+- **AI tools**: Enables its own CLI tool (auggie, cursor, etc.) inside the VM
+
 ## Usage as a Flake Input
 
 Import agentbox into your own flake to create project-specific VMs. See the [examples](./examples) folder for complete configurations:
