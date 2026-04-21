@@ -49,6 +49,7 @@ in
     ./codex.nix
     ./cursor.nix
     ./claude-code.nix
+    ./crush.nix
     ./services
   ];
 

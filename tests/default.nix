@@ -28,6 +28,15 @@
   # Auggie (Augment Code CLI) tests (A1-A3)
   tools-auggie = import ./tools-auggie.nix { inherit pkgs self; };
 
+  # Claude Code tests (CC1-CC2)
+  tools-claude-code = import ./tools-claude-code.nix { inherit pkgs self; };
+
+  # OpenAI Codex CLI tests (CX1-CX2)
+  tools-codex = import ./tools-codex.nix { inherit pkgs self; };
+
+  # Charmbracelet Crush tests (CR1-CR2)
+  tools-crush = import ./tools-crush.nix { inherit pkgs self; };
+
   # Cursor CLI tests (CU1-CU2)
   tools-cursor = import ./tools-cursor.nix { inherit pkgs self; };
 }

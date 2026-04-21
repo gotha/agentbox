@@ -144,6 +144,12 @@ The default credentials are:
 | `agentbox.docker.syncConfigFromHost` | bool | `false` | Copy `~/.docker` from host to guest |
 | `agentbox.auggie.enable` | bool | `false` | Enable Auggie (Augment Code CLI) |
 | `agentbox.auggie.syncConfigFromHost` | bool | `false` | Copy `~/.augment` from host to guest |
+| `agentbox.claudecode.enable` | bool | `false` | Enable Claude Code CLI |
+| `agentbox.claudecode.syncConfigFromHost` | bool | `false` | Copy `~/.claude` from host to guest |
+| `agentbox.codex.enable` | bool | `false` | Enable OpenAI Codex CLI |
+| `agentbox.codex.syncConfigFromHost` | bool | `false` | Copy `~/.codex` from host to guest |
+| `agentbox.crush.enable` | bool | `false` | Enable Charmbracelet Crush |
+| `agentbox.crush.syncConfigFromHost` | bool | `false` | Copy `~/.local/share/crush` from host to guest |
 | `agentbox.cursor.enable` | bool | `false` | Enable Cursor CLI |
 | `agentbox.cursor.syncConfigFromHost` | bool | `false` | Copy `~/.cursor` from host to guest |
 
@@ -262,6 +268,57 @@ extraConfig = {
 When enabled, this installs the `cursor-cli` from nixpkgs.
 
 If `syncConfigFromHost` is enabled, the `~/.cursor` directory from your host machine will be copied into the VM on boot.
+
+## Claude Code
+
+[Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) is Anthropic's agentic coding tool. It is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.claudecode.enable = true;
+
+  # Optionally sync Claude config from host
+  agentbox.claudecode.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs `claude-code` from nixpkgs.
+
+If `syncConfigFromHost` is enabled, the `~/.claude` directory from your host machine will be copied into the VM on boot.
+
+## Codex (OpenAI)
+
+[Codex CLI](https://github.com/openai/codex) is OpenAI's lightweight coding agent. It is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.codex.enable = true;
+
+  # Optionally sync Codex config from host
+  agentbox.codex.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs `codex` from nixpkgs.
+
+If `syncConfigFromHost` is enabled, the `~/.codex` directory from your host machine will be copied into the VM on boot.
+
+## Crush (Charmbracelet)
+
+[Crush](https://github.com/charmbracelet/crush) is Charmbracelet's glamorous terminal-based AI coding assistant. It is disabled by default. To enable it:
+
+```nix
+extraConfig = {
+  agentbox.crush.enable = true;
+
+  # Optionally sync Crush config from host
+  agentbox.crush.syncConfigFromHost = true;
+};
+```
+
+When enabled, this installs `crush` from nixpkgs.
+
+If `syncConfigFromHost` is enabled, the `~/.local/share/crush` directory from your host machine will be copied into the VM on boot.
 
 ## Host Shares
 
