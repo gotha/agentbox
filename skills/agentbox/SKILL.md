@@ -187,6 +187,8 @@ Create `.agentbox/flake.nix` unless merging with an existing root flake is more 
             agentbox.auggie.syncConfigFromHost = true;
             # OR: agentbox.cursor.enable = true;
             # OR: agentbox.codex.enable = true;
+            # OR: agentbox.claudecode.enable = true;
+            # OR: agentbox.crush.enable = true;
 
             # Auto-detected packages (example)
             agentbox.packages.extra = with nixpkgs.legacyPackages.x86_64-linux; [
