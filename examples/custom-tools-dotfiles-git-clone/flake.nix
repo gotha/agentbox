@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    agentbox.url = "github:gotha/agentbox";
+    agentbox.url = "github:gotha/agentbox/v0.1.0";
 
     # Home-manager for user-level configuration (pinned to match nixpkgs 25.11)
     home-manager = {
