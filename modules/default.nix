@@ -50,6 +50,7 @@ in
     ./cursor.nix
     ./claude-code.nix
     ./crush.nix
+    ./devshell-packages.nix
     ./services
   ];
 
@@ -218,6 +219,38 @@ in
         type = types.bool;
         default = defaults.project.validateMarker;
         description = "If true, validates that the marker file exists in the source";
+      };
+
+      # Build-time pre-install of the project flake's devShell packages
+      devShellPackages = {
+        enable = mkOption {
+          type = types.bool;
+          default = defaults.project.devShellPackages.enable;
+          description = ''
+            Pre-install the packages declared in the project flake's devShell into
+            the VM at build time, as globally available packages (on PATH at boot).
+            Opt-in; when false the build is unchanged. Requires a flake readable at
+            evaluation time, so it is supported only for git-style flake inputs
+            (not mount/copy sources).
+          '';
+        };
+
+        flake = mkOption {
+          type = types.nullOr types.raw;
+          default = defaults.project.devShellPackages.flake;
+          example = literalExpression "inputs.project";
+          description = ''
+            The project flake, passed as a Nix value (a locked input from the
+            consumer's flake.lock). Its devShells.<system>.<name> is read at build
+            time. Required when enable = true.
+          '';
+        };
+
+        name = mkOption {
+          type = types.str;
+          default = defaults.project.devShellPackages.name;
+          description = "Which devShell to extract: devShells.<system>.<name>.";
+        };
       };
     };
 

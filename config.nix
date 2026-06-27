@@ -50,6 +50,16 @@
     destPath = "/home/dev/project";
     marker = "flake.nix";    # File that identifies project root
     validateMarker = true;   # Validate marker exists
+
+    # Build-time pre-install of the project flake's devShell packages.
+    # When enabled, the packages declared in the project flake's devShell are
+    # baked into the VM image as globally available packages (on PATH at boot).
+    # Opt-in; disabled by default so the build is unchanged unless requested.
+    devShellPackages = {
+      enable = false;        # Opt-in
+      flake = null;          # Project flake (a Nix value / locked input). Required when enabled.
+      name = "default";      # Which devShells.<system>.<name> to extract
+    };
   };
 
   # Environment variables

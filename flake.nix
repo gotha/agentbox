@@ -2,7 +2,7 @@
   description = "gotha/agentbox - NixOS VM for coding agents";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     gotha-nixpkgs.url = "github:gotha/nixpkgs";
   };
 
