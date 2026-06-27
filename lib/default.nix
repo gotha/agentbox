@@ -9,5 +9,9 @@
 
   # Generate apps from nixosConfigurations (eliminates boilerplate in consumer flakes)
   mkVmApps = import ./mk-vm-apps.nix { inherit nixpkgs; };
+
+  # Pure helper to extract packages from a project flake's devShell (build-time
+  # pre-install). Exposed for reuse and testing.
+  extractDevShellPackages = import ./extract-devshell-packages.nix { lib = nixpkgs.lib; };
 }
 

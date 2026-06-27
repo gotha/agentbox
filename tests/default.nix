@@ -39,5 +39,14 @@
 
   # Cursor CLI tests (CU1-CU2)
   tools-cursor = import ./tools-cursor.nix { inherit pkgs self; };
+
+  # devShellPackages build-time pre-install: VM integration test (DS1-DS2)
+  devshell-packages = import ./devshell-packages.nix { inherit pkgs self; };
+
+  # devShellPackages extraction helper: pure eval tests
+  devshell-packages-eval = import ./devshell-packages-eval.nix { inherit pkgs self; };
+
+  # devShellPackages module behavior: NixOS eval tests (default-off, null-flake assertion)
+  devshell-packages-module-eval = import ./devshell-packages-module-eval.nix { inherit pkgs self; };
 }
 

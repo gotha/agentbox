@@ -135,6 +135,9 @@ The default credentials are:
 | `agentbox.project.destPath` | string | `"/home/dev/project"` | Destination path in VM |
 | `agentbox.project.marker` | string | `"flake.nix"` | File that identifies project root |
 | `agentbox.project.validateMarker` | bool | `true` | Validate marker file exists after setup |
+| `agentbox.project.devShellPackages.enable` | bool | `false` | Pre-install the project flake's devShell packages at build time |
+| `agentbox.project.devShellPackages.flake` | flake or null | `null` | Project flake (a locked input) to read the devShell from (required when enabled) |
+| `agentbox.project.devShellPackages.name` | string | `"default"` | Which `devShells.<system>.<name>` to extract |
 
 ### Tool Options
 
@@ -219,6 +222,45 @@ agentbox.project = {
 ```
 
 **Use case:** CI/CD environments, reproducible builds, or when you don't have the project locally.
+
+## devShell Pre-install (Build Time)
+
+If your project's flake defines a `devShell`, agentbox can read it **at build time** and bake the packages it declares into the VM image as globally installed packages. When you boot the VM, the tools are already on `PATH` — no download, no build, works offline — and a later `nix develop` finds them already in the Nix store.
+
+This is opt-in and disabled by default. Enable it by passing your project flake as a Nix value (a locked input) and turning the option on:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url  = "github:NixOS/nixpkgs/nixos-26.05";
+    agentbox.url = "github:gotha/agentbox";
+    project.url  = "git+ssh://git@github.com/you/your-project";  # locked in flake.lock
+    project.flake = true;
+  };
+
+  outputs = { self, nixpkgs, agentbox, project }: {
+    # ... mkDevVm ... extraConfig = {
+    agentbox.project.devShellPackages = {
+      enable = true;
+      flake  = project;     # the locked input
+      # name = "default";   # or a named devShell: devShells.<system>.<name>
+    };
+    # };
+  };
+}
+```
+
+How it works:
+
+- **Build time is evaluation time.** The packages are extracted while the VM is built, so the project flake must be readable then. That is why it is supported via a **flake input** (locked, fetched with your normal git/SSH credentials), not via the runtime `source.git.url` string (which is only cloned after boot).
+- **Git only.** Because `mount` and `copy` sources only exist inside the VM after boot, the build fails clearly if you enable this without providing a `flake`.
+- **Globally installed.** The extracted packages are added to the VM's system packages, so they are on `PATH` at boot — you don't need to run `nix develop`.
+- **Multiple devShells.** `name` selects `devShells.<system>.<name>` (default `"default"`).
+- **Fail loud.** If the named devShell is missing or declares no packages, the build fails with a clear message rather than producing a confusing VM.
+- **Visibility.** The resolved package set is traced at build time and written to `/etc/agentbox/devshell-packages` inside the VM.
+- **Trade-off.** The VM image grows by the devShell's build closure, and the baked set reflects the flake at build/lock time (refresh = rebuild).
+
+See [examples/devshell-prebuild-git](./examples/devshell-prebuild-git) for a complete configuration.
 
 ## Docker
 
