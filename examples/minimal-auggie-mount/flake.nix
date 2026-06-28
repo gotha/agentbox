@@ -3,7 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    agentbox.url = "github:gotha/agentbox/v0.1.0";
+    agentbox = {
+      url = "github:gotha/agentbox/v0.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, agentbox }:
