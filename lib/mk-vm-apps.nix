@@ -27,6 +27,7 @@ forAllSystems (hostSystem:
   in {
     default = { type = "app"; program = "${vmRunner.headless}/bin/run-${vmName}"; };
     vm = { type = "app"; program = "${vmRunner.headless}/bin/run-${vmName}"; };
+    vm-headless = { type = "app"; program = "${vmRunner.background}/bin/run-${vmName}-headless"; };
     vm-gui = { type = "app"; program = "${vmRunner.gui}/bin/run-${vmName}-gui"; };
   }
 )
