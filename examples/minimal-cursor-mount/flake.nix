@@ -2,7 +2,7 @@
   description = "Minimal agentbox VM with Cursor CLI";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     agentbox = {
       url = "github:gotha/agentbox/v0.1.0";
       inputs.nixpkgs.follows = "nixpkgs";

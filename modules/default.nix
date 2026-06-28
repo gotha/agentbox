@@ -277,6 +277,6 @@ in
   };
 
   # System state version
-  config.system.stateVersion = "25.11";
+  config.system.stateVersion = "26.05";
 }
 

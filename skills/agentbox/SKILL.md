@@ -140,7 +140,7 @@ Create `.agentbox/flake.nix` unless merging with an existing root flake is more 
   description = "Agentbox VM for {project-name}";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     agentbox.url = "github:gotha/agentbox";
   };
 
