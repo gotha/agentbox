@@ -95,8 +95,25 @@ Import agentbox into your own flake to create project-specific VMs. See the [exa
 After creating your `flake.nix`, run the VM with:
 
 ```bash
-# Run VM in headless mode (recommended)
+# Run VM in the foreground (serial console attached to your terminal)
 nix run .#vm
+
+# Run VM detached in the background; prints the SSH port and returns control
+nix run .#vm-headless
+
+# Run VM with a graphical window
+nix run .#vm-gui
+```
+
+`nix run .#vm-headless` daemonizes QEMU and prints the SSH command to connect, for example:
+
+```text
+VM 'dev-vm' started in background.
+
+  SSH:         ssh dev@localhost -p 24817
+  Port file:   /tmp/dev-vm-ssh-port
+  Console log: /tmp/dev-vm-console.log
+  Stop:        kill $(cat /tmp/dev-vm.pid)
 ```
 
 The default credentials are:

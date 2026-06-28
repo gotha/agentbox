@@ -123,5 +123,60 @@ in
     echo ""
     exec ${vmDrv}/bin/run-*-vm $SHARE_ARGS $NET_ARGS "$@"
   '';
+
+  background = pkgs.writeShellScriptBin "run-${vmName}-headless" ''
+    CONSOLE_LOG="/tmp/${vmName}-console.log"
+    PID_FILE="/tmp/${vmName}.pid"
+    PORT_FILE="/tmp/${vmName}-ssh-port"
+
+    # If a VM with this name is already running, don't try to start another one
+    # (QEMU would fail to lock the pidfile). Point the user at the running VM
+    # instead, and leave its recorded SSH port untouched.
+    if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
+      echo "VM '${vmName}' is already running (PID $(cat "$PID_FILE"))." >&2
+      if [ -s "$PORT_FILE" ]; then
+        echo "Connect with: ssh dev@localhost -p $(cat "$PORT_FILE")" >&2
+      fi
+      echo "Stop it with: kill \$(cat $PID_FILE)" >&2
+      exit 1
+    fi
+
+    # Remember the previously recorded port; commonScript overwrites PORT_FILE
+    # with a fresh random port below, so we can restore it if the launch fails.
+    PREV_PORT="$(cat "$PORT_FILE" 2>/dev/null || true)"
+
+    ${commonScript}
+
+    # Launch QEMU fully detached: no display, no monitor, serial captured to a
+    # log file, and qemu daemonizes itself while recording its PID for control.
+    if ! ${vmDrv}/bin/run-*-vm \
+      -display none \
+      -monitor none \
+      -serial "file:$CONSOLE_LOG" \
+      -pidfile "$PID_FILE" \
+      -daemonize \
+      $SHARE_ARGS $NET_ARGS "$@"; then
+      # Launch failed (commonScript already clobbered PORT_FILE) — restore the
+      # previous port so it keeps pointing at whatever VM is actually running.
+      if [ -n "$PREV_PORT" ]; then echo "$PREV_PORT" > "$PORT_FILE"; fi
+      echo "" >&2
+      echo "Error: failed to start VM '${vmName}'." >&2
+      echo "A VM with this name is probably already running." >&2
+      if [ -n "$PREV_PORT" ]; then
+        echo "Try connecting to the existing one: ssh dev@localhost -p $PREV_PORT" >&2
+      fi
+      echo "Find it with: pgrep -af '${vmName}'" >&2
+      exit 1
+    fi
+
+    echo ""
+    echo "VM '${vmName}' started in background."
+    echo ""
+    echo "  SSH:         ssh dev@localhost -p $SSH_PORT"
+    echo "  Port file:   $PORT_FILE"
+    echo "  Console log: $CONSOLE_LOG"
+    echo "  Stop:        kill \$(cat $PID_FILE)"
+    echo ""
+  '';
 }
 
